@@ -84,7 +84,7 @@ def remove_triples(trace):
     tmp = trace.copy()
     for i, act in enumerate(tmp[2:], start=2):
         if len(tmp)>2 and (tmp[i]==tmp[i-1]==tmp[i-2]):
-            trace.pop(i)
+            trace.pop(i-2)
 def remove_duplicates_beginning_and_end(trace):
     if len(trace) == 1:
         return trace
