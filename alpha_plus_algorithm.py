@@ -59,10 +59,13 @@ def get_activities(traces, preprocess):
             remove_triples(trace)
             #detect length 1 loops
             tmp = trace.copy()
+            pop =[]
             for idx, activity in enumerate(tmp[1:], start=1):
                 if tmp[idx-1] == tmp[idx] and tmp[idx] not in start_activities and tmp[idx] not in end_activities :
                     trace[idx] = "t" + trace[idx]
-                    trace.pop(idx-1)
+                    pop.append(idx-1)
+            for j in pop[::-1]:
+                del trace[j]
 
         # go through all activities in our trace and
         for idx, activity in enumerate(trace[1:], start=1):
@@ -82,9 +85,13 @@ def get_activities(traces, preprocess):
     return Activities(all_activities, start_activities, end_activities, direct_successions, length_two_loop, activities_with_loops)
 def remove_triples(trace):
     tmp = trace.copy()
+    pop = []
     for i, act in enumerate(tmp[2:], start=2):
         if len(tmp)>2 and (tmp[i]==tmp[i-1]==tmp[i-2]):
-            trace.pop(i-2)
+            pop.append(i-2)
+    pop = pop[::-1]
+    for j in pop:
+        del trace[j]
 def remove_duplicates_beginning_and_end(trace):
     if len(trace) == 1:
         return trace
