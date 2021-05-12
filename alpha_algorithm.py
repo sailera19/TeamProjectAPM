@@ -6,9 +6,22 @@ from pm4py.visualization.petri_net import visualizer as pn_visualizer
 
 
 def run_alpha_algorithm(traces):
-    all_activities, start_activities, end_activities, direct_successions = get_activities(traces)
+    all_activities, start_activities, end_activities, direct_successions, direct_successions_count \
+        = get_activities(traces)
 
     footprint = FootPrintMatrix(all_activities, direct_successions)
+    all_pairs = footprint.find_pairs()
+    maximal_pairs = remove_non_maximal_pairs(all_pairs)
+    net = AlphaPetriNet(start_activities=start_activities, end_activities=end_activities,
+                        all_activities=all_activities, maximal_pairs=maximal_pairs)
+
+    return net
+
+def run_alpha_algorithm_min_count(traces, min_count):
+    all_activities, start_activities, end_activities, direct_successions, direct_successions_count \
+        = get_activities(traces)
+
+    footprint = FootPrintMatrixMinCount(all_activities, direct_successions_count, min_count)
     all_pairs = footprint.find_pairs()
     maximal_pairs = remove_non_maximal_pairs(all_pairs)
     net = AlphaPetriNet(start_activities=start_activities, end_activities=end_activities,
@@ -24,9 +37,14 @@ def get_activities(traces):
     """
     start_activities = set()
     end_activities = set()
-    all_activities = set()
+    #all_activities = set()
+    all_activities = set([inner for outer in traces for inner in outer])
 
     direct_successions = defaultdict(set)
+
+    # initialize with count 0 for all successions
+    direct_successions_count = {y: {x: 0 for x in all_activities} for y in all_activities}
+
 
     # go through all our traces
     for trace in traces:
@@ -38,12 +56,19 @@ def get_activities(traces):
         all_activities.update(trace)
 
         # go through all activities in our trace and
-        for idx, activity in enumerate(trace[1:], start=1):
-            direct_successions[trace[idx - 1]].add(activity)
+        for predecessor, successor in zip(trace[:-1], trace[1:]):
+            direct_successions[predecessor].add(successor)
+            direct_successions_count[predecessor][successor] += 1
 
-    Activities = namedtuple("Activities", ["all_activities", "start_activities", "end_activities", "direct_successions"])
+    direct_successions_count = {key_outer: {
+        key_inner: val_inner for key_inner, val_inner in val_outer.items() if val_inner > 0}
+        for key_outer, val_outer in direct_successions_count.items()}
+    direct_successions_count = {key: val for key, val in direct_successions_count.items() if len(val) > 0}
 
-    return Activities(all_activities, start_activities, end_activities, direct_successions)
+    Activities = namedtuple("Activities", ["all_activities", "start_activities", "end_activities", "direct_successions",
+                                           "direct_successions_count"])
+
+    return Activities(all_activities, start_activities, end_activities, direct_successions, direct_successions_count)
 
 
 class FootPrintMatrix:
@@ -124,6 +149,30 @@ class FootPrintMatrix:
                         pairs.append(merged_pair)
             idx += 1
         return pairs
+
+
+class FootPrintMatrixMinCount(FootPrintMatrix):
+    def __init__(self, all_activities, direct_successions_count, min_count):
+        all_activities = sorted(list(all_activities))
+        footprint = []
+
+        for x in all_activities:
+            row = []
+            for y in all_activities:
+                x_follows_y = y in direct_successions_count and x in direct_successions_count[y] and direct_successions_count[y][x] > min_count
+                y_follows_x = x in direct_successions_count and y in direct_successions_count[x] and direct_successions_count[x][y] > min_count
+
+                if y_follows_x and not x_follows_y:
+                    row.append("→")
+                elif x_follows_y and not y_follows_x:
+                    row.append("←")
+                elif x_follows_y and y_follows_x:
+                    row.append("||")
+                else:
+                    row.append("#")
+            footprint.append(row)
+
+        self.footprint_df = pd.DataFrame(footprint, columns=all_activities, index=all_activities)
 
 
 def remove_non_maximal_pairs(pairs):

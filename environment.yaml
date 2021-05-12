@@ -3,5 +3,7 @@ channels:
 dependencies:
   - python=3.9
   - pandas=1.2
+  - xlrd=2.0
+  - openpyxl=3.0
   - pip:
       - pm4py
