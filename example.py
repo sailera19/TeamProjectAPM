@@ -1,6 +1,6 @@
 import pandas as pd
 from collections import defaultdict
-from alpha_algorithm import run_alpha_algorithm
+from alpha_algorithm import run_alpha_algorithm, run_alpha_algorithm_min_count
 from alpha_plus_algorithm import run_alpha_plus_algorithm
 from load_traces_from_log import load_file
 import os
@@ -58,6 +58,11 @@ def dataprep(data):
 
 traces_all = dataprep(data)
 
-net = run_alpha_plus_algorithm(traces_all)
+#net = run_alpha_algorithm(traces4)
+
+#net.show()
+
+
+net = run_alpha_algorithm(traces4, min_support=0.1)
 
 net.show()

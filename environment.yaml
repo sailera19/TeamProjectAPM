@@ -1,3 +1,4 @@
+name: apm_teamproject
 channels:
   - conda-forge
 dependencies:

@@ -5,7 +5,8 @@ from pm4py.objects.petri import utils
 from pm4py.visualization.petri_net import visualizer as pn_visualizer
 
 
-def run_alpha_algorithm(traces):
+def run_alpha_algorithm(traces, min_support=None):
+    traces = filter_traces(traces, min_support=min_support)
     all_activities, start_activities, end_activities, direct_successions, direct_successions_count \
         = get_activities(traces)
 
@@ -16,6 +17,7 @@ def run_alpha_algorithm(traces):
                         all_activities=all_activities, maximal_pairs=maximal_pairs)
 
     return net
+
 
 def run_alpha_algorithm_min_count(traces, min_count):
     all_activities, start_activities, end_activities, direct_successions, direct_successions_count \
@@ -241,3 +243,34 @@ class AlphaPetriNet:
     def show(self):
         gviz = pn_visualizer.apply(self.net, self.initial_marking, self.final_marking)
         pn_visualizer.view(gviz)
+
+
+def filter_traces(traces, min_support=None):
+    return_traces = traces.copy()
+    print("Traces at the start: ", len(traces))
+    if min_support:
+        n_traces = len(return_traces)
+        min_amount = round(min_support*n_traces)
+        all_activities = set([inner for outer in traces for inner in outer])
+        possible_successions = [(x, y) for x in all_activities for y in all_activities]
+        succession_counter = {x: 0 for x in possible_successions}
+        for trace in traces:
+            for predecessor, successor in zip(trace[:-1], trace[1:]):
+                succession_counter[(predecessor, successor)] += 1
+
+        valid_successions = {x: succession_counter[x] for x in succession_counter if succession_counter[x] > min_amount}
+
+        invalid_successions = [x for x in possible_successions if x not in valid_successions]
+
+        drop_traces = []
+
+        for i, trace in enumerate(return_traces):
+            if any(x in zip(trace[:-1], trace[1:]) for x in invalid_successions):
+                drop_traces.append(i)
+
+        for drop_index in sorted(drop_traces, reverse=True):
+            del return_traces[drop_index]
+
+    print("traces after filtering: ", len(return_traces))
+    return return_traces
+

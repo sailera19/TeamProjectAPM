@@ -4,10 +4,13 @@ from pm4py.objects.petri.obj import PetriNet, Marking
 from pm4py.objects.petri import utils
 from pm4py.visualization.petri_net import visualizer as pn_visualizer
 
+from alpha_algorithm import filter_traces
 
-def run_alpha_plus_algorithm(traces):
+
+def run_alpha_plus_algorithm(traces, min_support=None):
     #Preprocessing phase
     # extracting the length 1 loops
+    traces = filter_traces(traces, min_support=min_support)
     preprocess = True
     all_activities, start_activities, end_activities, direct_successions, length_two_loop, activities_with_loops = get_activities(traces, preprocess)
     footprint = FootPrintMatrix(activities_with_loops, direct_successions, length_two_loop)
