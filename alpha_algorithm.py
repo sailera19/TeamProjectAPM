@@ -5,8 +5,8 @@ from pm4py.objects.petri import utils
 from pm4py.visualization.petri_net import visualizer as pn_visualizer
 
 
-def run_alpha_algorithm(traces, min_support=None):
-    traces = filter_traces(traces, min_support=min_support)
+def run_alpha_algorithm(traces, min_support=None, include_start_end=True):
+    traces = filter_traces(traces, min_support=min_support, include_start_end=include_start_end)
     all_activities, start_activities, end_activities, direct_successions, direct_successions_count \
         = get_activities(traces)
 
@@ -245,18 +245,31 @@ class AlphaPetriNet:
         pn_visualizer.view(gviz)
 
 
-def filter_traces(traces, min_support=None):
+def filter_traces(traces, min_support=None, include_start_end=True):
     return_traces = traces.copy()
     print("Traces at the start: ", len(traces))
     if min_support:
         n_traces = len(return_traces)
         min_amount = round(min_support*n_traces)
         all_activities = set([inner for outer in traces for inner in outer])
+
+        if include_start_end:
+            # add start token
+            all_activities.add("^")
+            # add end token
+            all_activities.add("$")
+
         possible_successions = [(x, y) for x in all_activities for y in all_activities]
         succession_counter = {x: 0 for x in possible_successions}
         for trace in traces:
-            for predecessor, successor in zip(trace[:-1], trace[1:]):
-                succession_counter[(predecessor, successor)] += 1
+            if include_start_end:
+                # add start and end token
+                trace = ["^", *trace, "$"]
+
+            # create set of successions to avoid double counting
+            successions = set(zip(trace[:-1], trace[1:]))
+            for succession in successions:
+                succession_counter[succession] += 1
 
         valid_successions = {x: succession_counter[x] for x in succession_counter if succession_counter[x] > min_amount}
 
@@ -265,6 +278,9 @@ def filter_traces(traces, min_support=None):
         drop_traces = []
 
         for i, trace in enumerate(return_traces):
+            if include_start_end:
+                # add start and end token
+                trace = ["^", *trace, "$"]
             if any(x in zip(trace[:-1], trace[1:]) for x in invalid_successions):
                 drop_traces.append(i)
 

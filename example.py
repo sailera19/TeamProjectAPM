@@ -63,6 +63,10 @@ traces_all = dataprep(data)
 #net.show()
 
 
-net = run_alpha_algorithm(traces4, min_support=0.1)
+net = run_alpha_algorithm(traces4, min_support=0.1, include_start_end=True)
+
+net.show()
+
+net = run_alpha_algorithm(traces4, min_support=0.1, include_start_end=False)
 
 net.show()
