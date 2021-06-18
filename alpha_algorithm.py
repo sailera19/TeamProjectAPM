@@ -5,7 +5,7 @@ from pm4py.objects.petri import utils
 from pm4py.visualization.petri_net import visualizer as pn_visualizer
 
 
-def run_alpha_algorithm(traces, min_support=None, include_start_end=True):
+def run_alpha_algorithm(traces, min_support=None, include_start_end=True, activity_map=None):
     traces = filter_traces(traces, min_support=min_support, include_start_end=include_start_end)
     all_activities, start_activities, end_activities, direct_successions, direct_successions_count \
         = get_activities(traces)
@@ -14,7 +14,7 @@ def run_alpha_algorithm(traces, min_support=None, include_start_end=True):
     all_pairs = footprint.find_pairs()
     maximal_pairs = remove_non_maximal_pairs(all_pairs)
     net = AlphaPetriNet(start_activities=start_activities, end_activities=end_activities,
-                        all_activities=all_activities, maximal_pairs=maximal_pairs)
+                        all_activities=all_activities, maximal_pairs=maximal_pairs, activity_map=activity_map)
 
     return net
 
@@ -199,7 +199,7 @@ class AlphaPetriNet:
     initial_marking: Marking = None
     final_marking: Marking = None
 
-    def __init__(self, start_activities, end_activities, all_activities, maximal_pairs):
+    def __init__(self, start_activities, end_activities, all_activities, maximal_pairs, activity_map=None):
         self.net = PetriNet("Example: Rehse")
 
         # create and add places
@@ -217,7 +217,7 @@ class AlphaPetriNet:
         # Add Transitions for all Activities
         transition_map = {}
         for activity in all_activities:
-            transition = PetriNet.Transition(activity, activity)
+            transition = PetriNet.Transition(activity, activity_map[activity] if activity_map is not None else activity)
             self.net.transitions.add(transition)
             transition_map[activity] = transition
 

@@ -7,10 +7,10 @@ from pm4py.visualization.petri_net import visualizer as pn_visualizer
 from alpha_algorithm import filter_traces
 
 
-def run_alpha_plus_algorithm(traces, min_support=None):
+def run_alpha_plus_algorithm(traces, min_support=None, include_start_end=True, activity_map=None):
     #Preprocessing phase
     # extracting the length 1 loops
-    traces = filter_traces(traces, min_support=min_support)
+    traces = filter_traces(traces, min_support=min_support, include_start_end=True)
     preprocess = True
     all_activities, start_activities, end_activities, direct_successions, length_two_loop, activities_with_loops = get_activities(traces, preprocess)
     footprint = FootPrintMatrix(activities_with_loops, direct_successions, length_two_loop)
@@ -28,7 +28,8 @@ def run_alpha_plus_algorithm(traces, min_support=None):
 
     #Add back length 1 loops
     net = AlphaPetriNet(start_activities=start_activities, end_activities=end_activities,
-                        all_activities=all_activities, maximal_pairs=maximal_pairs, loop_one_start=loop_one_start, loop_one_end=loop_one_end)
+                        all_activities=all_activities, maximal_pairs=maximal_pairs, loop_one_start=loop_one_start,
+                        loop_one_end=loop_one_end, activity_map=activity_map)
 
     return net
 
@@ -232,7 +233,7 @@ class AlphaPetriNet:
     initial_marking: Marking = None
     final_marking: Marking = None
 
-    def __init__(self, start_activities, end_activities, all_activities, maximal_pairs, loop_one_start, loop_one_end):
+    def __init__(self, start_activities, end_activities, all_activities, maximal_pairs, loop_one_start, loop_one_end, activity_map=None):
         self.net = PetriNet("Example: Rehse")
 
         # create and add places
@@ -250,7 +251,7 @@ class AlphaPetriNet:
         # Add Transitions for all Activities
         transition_map = {}
         for activity in all_activities:
-            transition = PetriNet.Transition(activity, activity)
+            transition = PetriNet.Transition(activity, activity_map[activity] if activity_map is not None else activity)
             self.net.transitions.add(transition)
             transition_map[activity] = transition
 

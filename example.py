@@ -40,7 +40,7 @@ traces5 = [["a", "c", "i", "i", "i", "i", "i", "f", "h", "b", "b", "b", "g"]]
 
 
 
-traces4 = load_file("data/Data_Set.csv")
+traces4, activity_map4 = load_file("data/Data_Set.csv")
 
 data = pd.read_excel("Traces_Example.xlsx")
 
@@ -62,11 +62,12 @@ traces_all = dataprep(data)
 
 #net.show()
 
+traces_full_dataset, activity_map_full_dataset = load_file("data/Travel_Data_complete.csv")
 
-net = run_alpha_algorithm(traces4, min_support=0.1, include_start_end=True)
-
-net.show()
-
-net = run_alpha_algorithm(traces4, min_support=0.1, include_start_end=False)
+net = run_alpha_plus_algorithm(traces_full_dataset, min_support=0.05, include_start_end=True, activity_map=activity_map_full_dataset)
 
 net.show()
+
+#net = run_alpha_algorithm(traces4, min_support=0.1, include_start_end=False)
+
+#net.show()

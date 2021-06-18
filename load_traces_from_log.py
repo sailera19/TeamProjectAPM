@@ -21,4 +21,5 @@ def get_traces(event_log, replace_activities=True):
                 activity_map[activity] = activity_symbol
             activity = activity_symbol
         traces[case].append(activity)
-    return list(traces.values())
+    inverted_activity_map = {value: key for key, value in activity_map.items()}
+    return list(traces.values()), inverted_activity_map
