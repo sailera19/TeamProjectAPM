@@ -371,7 +371,6 @@ def filter_traces(traces, min_support=None, include_start_end=True, per_node=Fal
 
     return_traces = copy.deepcopy(traces)
     n_traces = len(return_traces)
-    min_amount = round(min_support*n_traces)
     all_activities = set([activity for trace in traces for activity in trace])
 
     if include_start_end:
@@ -403,6 +402,7 @@ def filter_traces(traces, min_support=None, include_start_end=True, per_node=Fal
                 if count < min_amount:
                     invalid_successions.append((node, successor))
     else:
+        min_amount = round(min_support * n_traces)
         possible_successions = [(x, y) for x in all_activities for y in all_activities]
         succession_counter = {x: 0 for x in possible_successions}
         for trace in traces:
