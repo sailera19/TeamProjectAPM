@@ -14,7 +14,8 @@ def run_alpha_plus_algorithm(traces, min_support=None, include_start_end=True, p
     if detect_loops:
         # Preprocessing phase, extracting the length 1 loops
         preprocess = True
-        all_activities, start_activities, end_activities, direct_successions, length_two_loop, activities_with_loops = get_activities(traces, preprocess)
+        all_activities, start_activities, end_activities, direct_successions, length_two_loop, activities_with_loops =\
+            get_activities(traces, preprocess)
         footprint = FootPrintMatrix(activities_with_loops, direct_successions, length_two_loop)
         all_pairs = footprint.find_pairs()
         maximal_pairs = remove_non_maximal_pairs(all_pairs)
@@ -23,8 +24,8 @@ def run_alpha_plus_algorithm(traces, min_support=None, include_start_end=True, p
 
         # Run Alpha Algorithm without length 1 loops
         preprocess = False
-        tmp, tmp1, tmp2, direct_successions, length_two_loop, tmp3 = get_activities(traces, preprocess)
-        footprint = FootPrintMatrix(tmp, direct_successions, length_two_loop)
+        no_length1_all_activities, _, _, direct_successions, length_two_loop, _ = get_activities(traces, preprocess)
+        footprint = FootPrintMatrix(no_length1_all_activities, direct_successions, length_two_loop)
         all_pairs = footprint.find_pairs()
         maximal_pairs = remove_non_maximal_pairs(all_pairs)
 
@@ -158,7 +159,7 @@ def remove_triples(trace):
     tmp = trace.copy()
     pop = []
     for i, act in enumerate(tmp[2:], start=2):
-        if len(tmp)>2 and (tmp[i]==tmp[i-1]==tmp[i-2]):
+        if len(tmp) > 2 and (tmp[i] == tmp[i-1] == tmp[i-2]):
             pop.append(i-2)
     pop = pop[::-1]
     for j in pop:
@@ -262,12 +263,13 @@ class FootPrintMatrix:
         b = set(p[1])
         b.update(q[1])
 
-        return (a, b)
+        return a, b
 
     def find_pairs(self):
         # get all →-(causality)-relations
         pairs = [({self.footprint_df[col][self.footprint_df[col] == "→"].index[i]}, {col})
-                 for col in self.footprint_df.columns for i in range(len(self.footprint_df[col][self.footprint_df[col] == '→'].index))]
+                 for col in self.footprint_df.columns for i in
+                 range(len(self.footprint_df[col][self.footprint_df[col] == '→'].index))]
         idx = 0
         while idx < len(pairs):
             p = pairs[idx]
@@ -346,13 +348,13 @@ class AlphaPetriNet:
             for a in pair[0]:
                 utils.add_arc_from_to(transition_map[a], place, self.net)
                 if a in loop_one_start:
-                    for idx in loop_one_start[a]:
-                        utils.add_arc_from_to(transition_map[idx], place, self.net)
+                    for idx_a in loop_one_start[a]:
+                        utils.add_arc_from_to(transition_map[idx_a], place, self.net)
             for b in pair[1]:
                 utils.add_arc_from_to(place, transition_map[b], self.net)
                 if b in loop_one_end:
-                    for idx in loop_one_end[b]:
-                        utils.add_arc_from_to(place, transition_map[idx], self.net)
+                    for idx_b in loop_one_end[b]:
+                        utils.add_arc_from_to(place, transition_map[idx_b], self.net)
 
     def show(self):
         gviz = pn_visualizer.apply(self.net, self.initial_marking, self.final_marking, {'format': 'png'})
@@ -415,7 +417,8 @@ def filter_traces(traces, min_support=None, include_start_end=True, per_node=Fal
             for succession in successions:
                 succession_counter[succession] += 1
 
-        valid_successions = {x: succession_counter[x] for x in succession_counter if succession_counter[x] >= min_amount}
+        valid_successions = {x: succession_counter[x] for x in succession_counter
+                             if succession_counter[x] >= min_amount}
 
         invalid_successions = [x for x in possible_successions if x not in valid_successions]
 
