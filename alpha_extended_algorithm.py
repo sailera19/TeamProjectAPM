@@ -6,8 +6,8 @@ from pm4py.visualization.petri_net import visualizer as pn_visualizer
 import copy
 
 
-def run_alpha_plus_algorithm(traces, min_support=None, include_start_end=True, per_node=False,
-                             filter_full_trace=True, detect_loops=False, activity_map=None):
+def run_alpha_extended_algorithm(traces, min_support=None, include_start_end=True, per_node=False,
+                                 filter_full_trace=True, detect_loops=False, activity_map=None):
     traces = filter_traces(traces, min_support=min_support, per_node=per_node,
                            include_start_end=include_start_end, filter_full_trace=filter_full_trace)
 
